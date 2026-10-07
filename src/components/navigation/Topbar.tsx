@@ -18,7 +18,7 @@ export function Topbar({ mobile }: { mobile: boolean }) {
   const dark = document.documentElement.classList.contains('dark')
 
   return (
-    <header className="h-14 shrink-0 flex items-center gap-2 px-3 md:px-5 border-b border-line bg-bg/80 backdrop-blur">
+    <header className="relative z-20 h-14 shrink-0 flex items-center gap-2 px-3 md:px-5 border-b border-line bg-bg/80 backdrop-blur">
       {mobile && (
         <>
           <Button variant="ghost" size="icon" aria-label="Open menu" onClick={() => ui.setDrawerOpen(true)}><Menu size={19} /></Button>
