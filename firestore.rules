@@ -1,0 +1,73 @@
+rules_version = '2';
+// Every user can only touch documents under users/{their own uid}.
+// Writes are shape-validated; AI never reaches Firestore directly (it goes through whitelisted tools).
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isOwner(uid) { return request.auth != null && request.auth.uid == uid; }
+    function str(v, max) { return v is string && v.size() <= max; }
+    function optStr(d, k, max) { return !(k in d) || str(d[k], max); }
+    function optNum(d, k) { return !(k in d) || d[k] == null || d[k] is number; }
+    function baseOk(d) { return d.createdAt is number && d.updatedAt is number; }
+
+    function validLead(d) {
+      return baseOk(d) && str(d.name, 200) && d.name.size() > 0
+        && d.status in ['New','Contacted','Qualified','Proposal','Negotiation','Won','Lost']
+        && d.priority in ['Low','Medium','High']
+        && d.value is number && d.value >= 0
+        && optStr(d, 'email', 200) && optStr(d, 'phone', 50) && optStr(d, 'company', 200)
+        && optStr(d, 'source', 100) && optStr(d, 'owner', 100) && optStr(d, 'notes', 5000)
+        && optNum(d, 'lastContactedAt') && optNum(d, 'nextFollowUpAt');
+    }
+    function validContact(d) {
+      return baseOk(d) && str(d.name, 200) && d.name.size() > 0
+        && optStr(d, 'email', 200) && optStr(d, 'phone', 50) && optStr(d, 'role', 100)
+        && optStr(d, 'notes', 5000) && (!('tags' in d) || (d.tags is list && d.tags.size() <= 20))
+        && optNum(d, 'lastContactedAt');
+    }
+    function validCompany(d) {
+      return baseOk(d) && str(d.name, 200) && d.name.size() > 0
+        && optStr(d, 'industry', 100) && optStr(d, 'website', 300) && optStr(d, 'location', 200)
+        && optStr(d, 'size', 50) && optStr(d, 'notes', 5000);
+    }
+    function validDeal(d) {
+      return baseOk(d) && str(d.name, 200) && d.name.size() > 0
+        && d.stage in ['Lead','Qualified','Proposal','Negotiation','Won','Lost']
+        && d.value is number && d.value >= 0
+        && d.probability is number && d.probability >= 0 && d.probability <= 100
+        && optNum(d, 'expectedCloseDate') && optStr(d, 'owner', 100) && optStr(d, 'notes', 5000);
+    }
+    function validTask(d) {
+      return baseOk(d) && str(d.title, 300) && d.title.size() > 0
+        && d.status in ['Todo','In Progress','Completed']
+        && d.priority in ['Low','Medium','High']
+        && optStr(d, 'description', 5000) && optNum(d, 'dueDate');
+    }
+    function validActivity(d) {
+      return baseOk(d) && str(d.summary, 2000) && str(d.type, 30)
+        && d.relatedType in ['lead','contact','company','deal'] && str(d.relatedId, 100);
+    }
+    function validNote(d) {
+      return baseOk(d) && str(d.body, 5000) && d.body.size() > 0
+        && d.relatedType in ['lead','contact','company','deal'] && str(d.relatedId, 100);
+    }
+    function validConversation(d) {
+      return baseOk(d) && str(d.title, 200) && d.messages is list && d.messages.size() <= 400;
+    }
+
+    match /users/{uid} {
+      allow read, write: if isOwner(uid);
+
+      match /leads/{id}         { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validLead(request.resource.data); }
+      match /contacts/{id}      { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validContact(request.resource.data); }
+      match /companies/{id}     { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validCompany(request.resource.data); }
+      match /deals/{id}         { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validDeal(request.resource.data); }
+      match /tasks/{id}         { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validTask(request.resource.data); }
+      match /activities/{id}    { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validActivity(request.resource.data); }
+      match /notes/{id}         { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validNote(request.resource.data); }
+      match /conversations/{id} { allow read, delete: if isOwner(uid); allow create, update: if isOwner(uid) && validConversation(request.resource.data); }
+    }
+
+    match /{document=**} { allow read, write: if false; }
+  }
+}
