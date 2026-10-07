@@ -44,8 +44,8 @@ export function UIProvider({ children }: { children: ReactNode }) {
   return (
     <Ctx.Provider value={api}>
       {children}
-      {detail && <EntityDetail key={`${detail.type}:${detail.id}`} {...detail} onClose={() => setDetail(null)} />}
-      {form && <EntityForm key={`${form.type}:${form.item?.id ?? 'new'}`} entity={form.type} item={form.item} defaults={form.defaults} onClose={() => setForm(null)} />}
+      {detail && <EntityDetail key={`detail:${detail.type}:${detail.id}`} {...detail} onClose={() => setDetail(null)} />}
+      {form && <EntityForm key={`form:${form.type}:${form.item?.id ?? "new"}`} entity={form.type} item={form.item} defaults={form.defaults} onClose={() => setForm(null)} />}
       {draft && <DraftDialog {...draft} onClose={() => setDraft(null)} />}
       {palette && <Suspense fallback={null}><CommandPalette onClose={() => setPalette(false)} /></Suspense>}
     </Ctx.Provider>

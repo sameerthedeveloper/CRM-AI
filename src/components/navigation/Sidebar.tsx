@@ -63,14 +63,14 @@ function ConversationRow({ c, active, onNavigate }: { c: Conversation; active: b
 }
 
 /** `compact` = icon-only rail (tablet). */
-export function Sidebar({ compact, onNavigate = () => {} }: { compact?: boolean; onNavigate?: () => void }) {
+export function Sidebar({ compact, fluid, onNavigate = () => {} }: { compact?: boolean; fluid?: boolean; onNavigate?: () => void }) {
   const { conversations } = useData()
   const { id } = useParams()
   const nav = useNavigate()
   const recent = [...conversations].sort((a, b) => b.updatedAt - a.updatedAt).slice(0, 12)
 
   return (
-    <nav aria-label="Primary" className={cn('h-full flex flex-col bg-bg border-r border-line', compact ? 'w-16 items-center px-2' : 'w-64 px-3')}>
+    <nav aria-label="Primary" className={cn('h-full flex flex-col bg-bg border-r border-line', compact ? 'w-16 items-center px-2' : fluid ? 'w-full px-3 border-r-0' : 'w-64 px-3')}>
       <div className={cn('h-14 flex items-center shrink-0', compact ? 'justify-center' : 'px-1.5')}><Wordmark compact={compact} /></div>
 
       <button onClick={() => { nav('/chat'); onNavigate() }} aria-label="New chat" title="New chat"

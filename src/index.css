@@ -86,6 +86,8 @@ dialog.dlg[open] { animation: dlg-in 200ms cubic-bezier(0.2, 0.8, 0.2, 1); displ
 dialog.dlg::backdrop { background: rgb(20 18 14 / 0.38); backdrop-filter: blur(2px); animation: fade-in 200ms; }
 dialog.dlg.sheet { margin: 0 0 0 auto; height: 100dvh; max-height: 100dvh; border-radius: 18px 0 0 18px; width: min(560px, 100vw); }
 dialog.dlg.sheet[open] { animation: sheet-in 240ms cubic-bezier(0.2, 0.8, 0.2, 1); }
+dialog.dlg.drawer { margin: 0 auto 0 0; height: 100dvh; max-height: 100dvh; border-radius: 0 18px 18px 0; width: min(300px, 86vw); border-left: 0; }
+dialog.dlg.drawer[open] { animation: drawer-in 220ms cubic-bezier(0.2, 0.8, 0.2, 1); }
 dialog.dlg.palette { margin: 12vh auto auto; }
 @media (max-width: 640px) {
   dialog.dlg.sheet { border-radius: 0; width: 100vw; }
@@ -94,6 +96,7 @@ dialog.dlg.palette { margin: 12vh auto auto; }
 
 @keyframes dlg-in { from { opacity: 0; transform: translateY(8px) scale(0.985); } }
 @keyframes sheet-in { from { opacity: 0; transform: translateX(24px); } }
+@keyframes drawer-in { from { opacity: 0; transform: translateX(-24px); } }
 @keyframes fade-in { from { opacity: 0; } }
 @keyframes fade-up { from { opacity: 0; transform: translateY(6px); } }
 @keyframes dot { 0%, 80%, 100% { opacity: 0.25; transform: translateY(0); } 40% { opacity: 1; transform: translateY(-2px); } }

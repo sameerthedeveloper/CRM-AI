@@ -2,7 +2,7 @@ import { z, type ZodTypeAny } from 'zod'
 import type { CrmService } from '@/lib/crm/service'
 import type { DataStore } from '@/lib/crm/store'
 import { dealRisk, isOpenLead, isOverdue, leadFollowUps, pipelineSummary, quietDays } from '@/lib/crm/insights'
-import { formatCurrency, humanError, ValidationError } from '@/lib/utils'
+import { formatCurrency, formatDate, humanError, ValidationError } from '@/lib/utils'
 import {
   ACTIVITY_TYPES, DEAL_STAGES, LEAD_STATUSES, PRIORITIES, TASK_STATUSES,
   type Contact, type Deal, type Lead, type Task,
@@ -44,6 +44,9 @@ const taskRow = (t: Task) => ({
   dueDate: t.dueDate ? new Date(t.dueDate).toISOString().slice(0, 10) : null, relatedLead: t.relatedLead,
 })
 
+const DATE_KEYS = new Set(['lastContactedAt', 'nextFollowUpAt', 'expectedCloseDate', 'dueDate'])
+const show = (k: string, v: unknown) => (DATE_KEYS.has(k) ? (v ? formatDate(Number(v)) : 'none') : String(v))
+const changes = (d: Record<string, unknown>) => Object.entries(d).map(([k, v]) => `${k} → ${show(k, v)}`).join(', ')
 const includes = (hay: string, q: string) => hay.toLowerCase().includes(q.toLowerCase())
 const notFound = (what: string) => { throw new ValidationError(`${what} not found`) }
 const nameOf = async (ctx: ToolCtx, coll: 'leads' | 'contacts' | 'deals' | 'tasks', id: string) => {
@@ -181,7 +184,7 @@ const defs: ToolDef[] = [
     name: 'updateLead', kind: 'write', description: 'Update fields of a lead.', argsHelp: '{id, data:{…any createLead field}}',
     args: z.object({ id: z.string().min(1), data: schemas.lead.update }).strict(),
     run: (a, c) => c.crm.update('lead', a.id, a.data),
-    preview: async (a, c) => `Update lead “${await nameOf(c, 'leads', a.id)}”: ${Object.entries(a.data).map(([k, v]) => `${k} → ${v}`).join(', ')}`,
+    preview: async (a, c) => `Update lead “${await nameOf(c, 'leads', a.id)}”: ${changes(a.data)}`,
   },
   {
     name: 'deleteLead', kind: 'write', danger: true, description: 'Permanently delete a lead.', argsHelp: '{id}', args: idArg,
@@ -212,12 +215,12 @@ const defs: ToolDef[] = [
     name: 'updateDeal', kind: 'write', description: 'Update a deal.', argsHelp: '{id, data:{…any createDeal field}}',
     args: z.object({ id: z.string().min(1), data: schemas.deal.update }).strict(),
     run: (a, c) => c.crm.update('deal', a.id, a.data),
-    preview: async (a, c) => `Update deal “${await nameOf(c, 'deals', a.id)}”: ${Object.entries(a.data).map(([k, v]) => `${k} → ${v}`).join(', ')}`,
+    preview: async (a, c) => `Update deal “${await nameOf(c, 'deals', a.id)}”: ${changes(a.data)}`,
   },
   {
     name: 'createTask', kind: 'write', description: 'Create a task / follow-up.', argsHelp: '{title, description?, relatedLead?, relatedContact?, relatedCompany?, dueDate? (ISO), priority?, status?}',
     args: schemas.task.create, run: (a, c) => c.crm.create('task', a),
-    preview: async a => `Create task “${a.title}”${a.dueDate ? ` due ${String(a.dueDate).slice(0, 10)}` : ''}`,
+    preview: async a => `Create task “${a.title}”${a.dueDate ? ` due ${formatDate(Number(a.dueDate))}` : ''}`,
   },
   {
     name: 'completeTask', kind: 'write', description: 'Mark a task completed.', argsHelp: '{id}', args: idArg,

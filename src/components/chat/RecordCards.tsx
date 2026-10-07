@@ -12,7 +12,8 @@ import type { RecordRef } from '@/types/crm'
 export function RecordCards({ records }: { records: RecordRef[] }) {
   const data = useData()
   const ui = useUI()
-  const rows = records.map(r => ({ r, v: describeRecord(data, r.entity, r.id) })).filter(x => x.v)
+  const seen = new Set<string>()
+  const rows = records.filter(r => { const k = `${r.entity}:${r.id}`; return !seen.has(k) && !!seen.add(k) }).map(r => ({ r, v: describeRecord(data, r.entity, r.id) })).filter(x => x.v)
   if (!rows.length) return null
   return (
     <ul className="mt-4 space-y-2.5" aria-label="Records">

@@ -8,14 +8,15 @@ interface DialogProps {
   onClose: () => void
   title?: string
   description?: string
-  variant?: 'center' | 'sheet' | 'palette'
+  variant?: 'center' | 'sheet' | 'palette' | 'drawer'
+  label?: string
   width?: string
   children: ReactNode
   footer?: ReactNode
 }
 
 /** Built on native <dialog>: focus trap, Esc to close, inert background and screen-reader semantics come from the browser. */
-export function Dialog({ open, onClose, title, description, variant = 'center', width = 'max-w-lg', children, footer }: DialogProps) {
+export function Dialog({ open, onClose, title, label, description, variant = 'center', width = 'max-w-lg', children, footer }: DialogProps) {
   const ref = useRef<HTMLDialogElement>(null)
   const titleId = useId()
   const openRef = useRef(open)
@@ -31,9 +32,9 @@ export function Dialog({ open, onClose, title, description, variant = 'center', 
   return (
     <dialog
       ref={ref}
-      className={cn('dlg', variant === 'sheet' && 'sheet', variant === 'palette' && 'palette', variant !== 'sheet' && width)}
+      className={cn('dlg', variant === 'sheet' && 'sheet', variant === 'drawer' && 'drawer', variant === 'palette' && 'palette', (variant === 'center' || variant === 'palette') && width)}
       aria-labelledby={title ? titleId : undefined}
-      aria-label={title ? undefined : 'Dialog'}
+      aria-label={title ? undefined : label ?? 'Dialog'}
       onClose={() => { if (openRef.current) onClose() }}
       onMouseDown={e => { if (e.target === e.currentTarget) onClose() }}
     >
@@ -48,7 +49,7 @@ export function Dialog({ open, onClose, title, description, variant = 'center', 
               <Button variant="ghost" size="icon" aria-label="Close" onClick={onClose} className="-mr-2 -mt-1"><X size={18} /></Button>
             </header>
           )}
-          <div className={cn('overflow-y-auto min-h-0 flex-1', variant === 'palette' ? '' : 'px-6 pb-5')}>{children}</div>
+          <div className={cn('overflow-y-auto min-h-0 flex-1', variant === 'palette' || variant === 'drawer' ? '' : 'px-6 pb-5')}>{children}</div>
           {footer && <footer className="shrink-0 px-6 py-4 border-t border-line flex justify-end gap-2 bg-surface">{footer}</footer>}
         </>
       )}

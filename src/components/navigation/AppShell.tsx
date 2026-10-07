@@ -53,8 +53,8 @@ export function AppShell() {
         {bp === 'mobile' && <MobileNav />}
       </div>
       {bp === 'mobile' && (
-        <Dialog open={ui.drawerOpen} onClose={() => ui.setDrawerOpen(false)} variant="sheet" title="Menu">
-          <div className="-mx-6 -mb-5 h-full"><Sidebar onNavigate={() => ui.setDrawerOpen(false)} /></div>
+        <Dialog open={ui.drawerOpen} onClose={() => ui.setDrawerOpen(false)} variant="drawer" label="Menu">
+          <Sidebar fluid onNavigate={() => ui.setDrawerOpen(false)} />
         </Dialog>
       )}
     </div>
